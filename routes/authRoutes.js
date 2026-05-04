@@ -3,9 +3,11 @@ const express = require("express");
 const router = express.Router();
 const sqlite3 = require("sqlite3").verbose();
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 // Anslut till db
 const db = new sqlite3.Database(process.env.DATABASE);
+
 // Lägg till användare
 router.post("/register", async (req, res) => {
   try {
@@ -74,8 +76,16 @@ router.post("/login", async (req, res) => {
         if (!passwordMatch) {
           res.status(401).json({ message: "Felaktigt användarnamn/lösenord!" });
         } else {
+          // Skapa JWT
+          const payload = { username: username };
+          const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, { expiresIn: '1h' });
+          const response = {
+            message: "Användare inloggad!",
+            token: token
+          }
+
           //Korrekt login
-          res.status(200).json({ message: "korrekt inloggning!" });
+          res.status(200).json({ response });
         }
       }
     });
