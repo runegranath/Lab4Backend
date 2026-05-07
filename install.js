@@ -5,6 +5,7 @@ const sqlite3 = require("sqlite3").verbose();
 
 // Connect
 const db = new sqlite3.Database(process.env.DATABASE);
+module.exports = db;
 
 // Create table users
 db.serialize(() => {

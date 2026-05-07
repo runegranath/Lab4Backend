@@ -64,6 +64,7 @@ router.post("/login", async (req, res) => {
 
     // Kolla om användare existerar
     const sql = `SELECT * FROM users WHERE username=?`;
+
     db.get(sql, [username], async (err, row) => {
       if (err) {
         res.status(400).json({ message: "Fel vid validering...." });
@@ -78,11 +79,13 @@ router.post("/login", async (req, res) => {
         } else {
           // Skapa JWT
           const payload = { username: username };
-          const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, { expiresIn: '1h' });
+          const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
+            expiresIn: "1h",
+          });
           const response = {
             message: "Användare inloggad!",
-            token: token
-          }
+            token: token,
+          };
 
           //Korrekt login
           res.status(200).json({ response });
