@@ -17,7 +17,7 @@ app.use(cors());
 // Routes
 app.use("/api", authRoutes);
 
-// Skyddade routes
+// Skyddade routes, använder authenticateToken som filter, giltigt anrop får tillgång till listan över användare
 app.get("/api/protected", authenticateToken, (req, res) => {
   const sql = "SELECT username, created FROM users";
 
@@ -35,21 +35,22 @@ app.get("/api/protected", authenticateToken, (req, res) => {
   });
 });
 
-// Validera Token
+// Validera Token, kontrollera att anropet har en giltig JWT i Authorization-headern
 function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1]; // Token
+  const token = authHeader && authHeader.split(" ")[1]; // Token 
 
   if (token == null)
     res
       .status(401)
       .json({ message: "Ej auktoriserad för denna route - token saknas! " });
 
+  // Verifierar token mot nyckeln och om det lyckas så sparas användardatan i req-objektet och next körs
   jwt.verify(token, process.env.JWT_SECRET_KEY, (err, user) => {
     if (err) return res.status(403).json({ message: "Ej korrekt JWT" });
 
     req.username = user;
-    next();
+    next(); // går vidare till route
   });
 }
 

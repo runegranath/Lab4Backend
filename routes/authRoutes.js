@@ -5,7 +5,7 @@ const sqlite3 = require("sqlite3").verbose();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-// Anslut till db
+// Anslut till SQLite-db
 const db = new sqlite3.Database(process.env.DATABASE);
 
 // Lägg till användare
@@ -20,9 +20,10 @@ router.post("/register", async (req, res) => {
         .json({ message: "Fel input, skicka användarnamn och lösenord" });
     }
 
-    // Hash password
+    // Hash password, salta 10 rundor
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
+    // Kontrollera om användarnamn redan finns
     const sqlCheck = "SELECT * FROM users WHERE username = ?";
 
     db.get(sqlCheck, [username], (err, row) => {
@@ -34,6 +35,7 @@ router.post("/register", async (req, res) => {
         return res.status(400).json({ error: "Användarnamnet är upptaget" });
       }
 
+      // Sätter in ny användare 
       const sql = `INSERT INTO users(username, password) VALUES(?,?)`;
       db.run(sql, [username, hashedPassword], (err) => {
         if (err) {
@@ -69,25 +71,26 @@ router.post("/login", async (req, res) => {
       if (err) {
         res.status(400).json({ message: "Fel vid validering...." });
       } else if (!row) {
+        // Samma felmeddelande för att undvika att göra det lätt för hackare
         res.status(401).json({ message: "Felaktigt användarnamn/lösenord!" });
       } else {
-        // Användare finns - kolla lösen/användarnamn
+        // Användare finns - kolla lösen/användarnamn, bcrypt sköter den interna avkodningen/jämförelsen
         const passwordMatch = await bcrypt.compare(password, row.password);
 
         if (!passwordMatch) {
           res.status(401).json({ message: "Felaktigt användarnamn/lösenord!" });
         } else {
-          // Skapa JWT
+          // Skapa JWT, payload har information om användaren och signering sker med .env-nyckel
           const payload = { username: username };
           const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-            expiresIn: "1h",
+            expiresIn: "1h", // giltig 1h
           });
           const response = {
             message: "Användare inloggad!",
             token: token,
           };
 
-          //Korrekt login
+          //Korrekt login, skicka tillbaka token till klienten
           res.status(200).json({ response });
         }
       }
