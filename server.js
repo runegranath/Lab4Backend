@@ -19,7 +19,7 @@ app.use("/api", authRoutes);
 
 // Skyddade routes
 app.get("/api/protected", authenticateToken, (req, res) => {
-  const sql = "SELECT username, account_created FROM users";
+  const sql = "SELECT username, created FROM users";
 
   db.all(sql, [], (err, rows) => {
     if (err) {
@@ -29,7 +29,7 @@ app.get("/api/protected", authenticateToken, (req, res) => {
     // Hamna här vid next och får skyddad info
     res.json({
       message: "Skyddad route!",
-      loggedInUser: req.user.username,
+      loggedInUser: req.user?.username,
       data: rows,
     });
   });
@@ -45,10 +45,10 @@ function authenticateToken(req, res, next) {
       .status(401)
       .json({ message: "Ej auktoriserad för denna route - token saknas! " });
 
-  jwt.verify(token, process.env.JWT_SECRET_KEY, (err, username) => {
+  jwt.verify(token, process.env.JWT_SECRET_KEY, (err, user) => {
     if (err) return res.status(403).json({ message: "Ej korrekt JWT" });
 
-    req.username = username;
+    req.username = user;
     next();
   });
 }

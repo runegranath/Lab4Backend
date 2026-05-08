@@ -17,7 +17,7 @@ router.post("/register", async (req, res) => {
     if (!username || !password) {
       return res
         .status(400)
-        .json({ error: "Fel input, skicka användarnamn och lösenord" });
+        .json({ message: "Fel input, skicka användarnamn och lösenord" });
     }
 
     // Hash password
